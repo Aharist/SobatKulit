@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Shield, MapPin, Sun } from 'lucide-react';
 
 export default function HomePage() {
 
@@ -75,6 +76,85 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* 1. SEKSI: BAGAIMANA SOBATKULIT BEKERJA */}
+      <section className="homepage-section animate-slide-up" style={{ animationDelay: '300ms' }}>
+        <h2 className="section-title">BAGAIMANA SOBATKULIT BEKERJA</h2>
+        <div className="how-it-works-grid">
+          <div className="how-card">
+            <span className="how-num">01</span>
+            <h3 className="how-title">Ambil Foto Gejala</h3>
+            <p className="how-desc">
+              Ambil foto area kulit yang bermasalah secara jelas langsung dari kamera atau unggah dari galeri dengan pencahayaan cukup.
+            </p>
+          </div>
+          <div className="how-card">
+            <span className="how-num">02</span>
+            <h3 className="how-title">Lengkapi Kuesioner</h3>
+            <p className="how-desc">
+              Isi data singkat mengenai lokasi tubuh, gejala penyerta (gatal/nyeri), dan durasi kondisi untuk membantu akurasi.
+            </p>
+          </div>
+          <div className="how-card">
+            <span className="how-num">03</span>
+            <h3 className="how-title">Analisis Multimodal AI</h3>
+            <p className="how-desc">
+              Sistem AI memproses visual gambar dan data kuesioner secara sinkron menggunakan model kecerdasan buatan tingkat lanjut.
+            </p>
+          </div>
+          <div className="how-card">
+            <span className="how-num">04</span>
+            <h3 className="how-title">Hasil & Edukasi Instan</h3>
+            <p className="how-desc">
+              Dapatkan skrining awal, tingkat keyakinan AI, penyebab umum, dan panduan pertolongan pertama medis.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. SEKSI: SIAPA YANG HARUS MENGGUNAKAN SOBATKULIT */}
+      <section className="homepage-section animate-slide-up" style={{ animationDelay: '400ms' }}>
+        <h2 className="section-title">SIAPA YANG HARUS MENGGUNAKAN SOBATKULIT</h2>
+        <div className="who-grid">
+          <div className="who-card">
+            <div className="who-icon-wrapper">
+              <Shield size={20} />
+            </div>
+            <h3 className="who-title">Individu dengan Aktivitas Padat</h3>
+            <p className="who-desc">
+              Bagi mereka yang memiliki keterbatasan waktu untuk pengecekan awal gejala ringan ke faskes.
+            </p>
+          </div>
+          <div className="who-card">
+            <div className="who-icon-wrapper">
+              <MapPin size={20} />
+            </div>
+            <h3 className="who-title">Masyarakat di Area Terpencil</h3>
+            <p className="who-desc">
+              Solusi akses edukasi kesehatan kulit pertama bagi wilayah dengan keterbatasan dokter spesialis.
+            </p>
+          </div>
+          <div className="who-card">
+            <div className="who-icon-wrapper">
+              <Sun size={20} />
+            </div>
+            <h3 className="who-title">Aktivis Luar Ruangan</h3>
+            <p className="who-desc">
+              Pengguna yang sering terpapar matahari ekstrem, polusi, atau zat kimia pemicu iritasi kulit.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. SEKSI: MENGAPA DETEKSI DINI MASALAH KULIT PENTING */}
+      <section className="homepage-section animate-slide-up" style={{ animationDelay: '500ms', marginBottom: '64px' }}>
+        <h2 className="section-title">MENGAPA DETEKSI DINI MASALAH KULIT PENTING</h2>
+        <div className="importance-banner">
+          <p className="importance-text">
+            Kulit adalah pertahanan pertama tubuh Anda. Infeksi bakteri akut seperti Cellulitis atau reaksi alergi obat berat dapat berkembang dari bercak kecil menjadi kondisi fatal dalam hitungan jam. Deteksi dini melalui skrining awal membantu Anda membedakan kondisi umum yang stabil dengan kondisi darurat (Red-Flag) yang membutuhkan tindakan medis instan di IGD terdekat sebelum terjadi komplikasi sistemik.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

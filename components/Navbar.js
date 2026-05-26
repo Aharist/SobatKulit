@@ -44,7 +44,7 @@ export default function Navbar() {
         <img
           src="/assets/logo.png"
           alt="SobatKulit Logo"
-          style={{ height: '32px', width: 'auto', objectFit: 'contain' }}
+          style={{ height: '80px', width: 'auto', objectFit: 'contain' }}
         />
         Sobat<span>Kulit</span>
       </Link>
