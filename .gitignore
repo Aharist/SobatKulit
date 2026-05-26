@@ -47,3 +47,6 @@ documentation
 
 # pdf
 *.pdf
+Dockerfile
+cloudbuild.yaml
+sobatkulit.zip

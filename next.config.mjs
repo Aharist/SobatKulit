@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   async headers() {
     return [
       {
@@ -38,7 +39,7 @@ const nextConfig = {
               "img-src 'self' data: blob: https://*.supabase.co https://maps.googleapis.com https://maps.gstatic.com https://img.clerk.com",
               "font-src 'self' https://fonts.gstatic.com https://maxst.icons8.com",
               "connect-src 'self' https://*.supabase.co https://maps.googleapis.com https://*.clerk.accounts.dev https://generativelanguage.googleapis.com",
-              "frame-src 'self' https://*.clerk.accounts.dev",
+              "frame-src 'self' https://*.clerk.accounts.dev https://www.google.com",
               "worker-src 'self' blob:",
             ].join('; '),
           },

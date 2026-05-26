@@ -1,14 +1,13 @@
 'use client';
 
 export default function EmergencyMap({ lat, lng }) {
-  // Use Google Maps Embed API for directions to nearest hospital
   const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
-  
-  // Google Maps search URL for nearby hospitals
-  const searchUrl = `https://www.google.com/maps/search/rumah+sakit+IGD/@${lat},${lng},14z`;
-  
-  // Embed URL — search for hospitals near user location
-  const embedUrl = `https://www.google.com/maps/embed/v1/search?key=${mapsApiKey}&q=rumah+sakit+IGD+terdekat&center=${lat},${lng}&zoom=14`;
+
+  // Embed URL — directions mode: shows route from user to nearest hospital/IGD
+  const embedUrl = `https://www.google.com/maps/embed/v1/directions?key=${mapsApiKey}&origin=${lat},${lng}&destination=rumah+sakit+IGD+terdekat&mode=driving`;
+
+  // Google Maps directions URL for "Open in Google Maps" button
+  const directionsUrl = `https://www.google.com/maps/dir/${lat},${lng}/rumah+sakit+IGD+terdekat`;
 
   return (
     <div style={{ marginTop: '8px' }}>
@@ -16,7 +15,7 @@ export default function EmergencyMap({ lat, lng }) {
         <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <h3 className="heading-card" style={{ fontSize: '0.875rem' }}>
             <i className="las la-map-marked-alt" style={{ color: 'var(--danger-red)', marginRight: '6px' }} />
-            Peta RS / IGD Terdekat
+            Rute ke RS / IGD Terdekat
           </h3>
         </div>
 
@@ -29,7 +28,7 @@ export default function EmergencyMap({ lat, lng }) {
             allowFullScreen
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            title="Peta rumah sakit terdekat"
+            title="Rute ke rumah sakit terdekat"
           />
         ) : (
           <div style={{
@@ -51,14 +50,14 @@ export default function EmergencyMap({ lat, lng }) {
 
         <div style={{ padding: '12px 16px' }}>
           <a
-            href={searchUrl}
+            href={directionsUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-danger"
             style={{ width: '100%', textDecoration: 'none', display: 'flex', padding: '12px', fontSize: '0.8125rem' }}
           >
             <i className="las la-directions" style={{ fontSize: '1.125rem' }} />
-            BUKA DI GOOGLE MAPS
+            BUKA NAVIGASI DI GOOGLE MAPS
           </a>
           <p className="text-meta" style={{ textAlign: 'center', marginTop: '8px' }}>
             Koordinat: {lat.toFixed(6)}, {lng.toFixed(6)}
