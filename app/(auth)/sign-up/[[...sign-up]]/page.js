@@ -6,5 +6,5 @@ export const metadata = {
 };
 
 export default function SignUpPage() {
-  return <SignUp afterSignUpUrl="/" signInUrl="/sign-in" />;
+  return <SignUp path="/sign-up" signInUrl="/sign-in" fallbackRedirectUrl="/" />;
 }

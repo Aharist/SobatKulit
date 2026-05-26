@@ -58,7 +58,11 @@ export default function Navbar() {
       </ul>
 
       <div className="navbar-right">
-        {!mounted || !isLoaded ? (
+        {!mounted ? (
+          <div style={{ width: '80px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="spinner spinner-sm" />
+          </div>
+        ) : !isLoaded ? (
           <div style={{ width: '80px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div className="spinner spinner-sm" />
           </div>

@@ -1,13 +1,40 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import EmergencyMap from './EmergencyMap';
 
 export default function EmergencyAlert({ result, onReset }) {
+  const router = useRouter();
   const [showMap, setShowMap] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [locationError, setLocationError] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(false);
+  const [trackingLoading, setTrackingLoading] = useState(false);
+  const [tracked, setTracked] = useState(false);
+
+  async function handleTrackThis() {
+    if (!result.scanLogId) return;
+    setTrackingLoading(true);
+    try {
+      const res = await fetch('/api/tracker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create_session',
+          scanLogId: result.scanLogId,
+          title: result.condition_name,
+        }),
+      });
+      if (res.ok) {
+        setTracked(true);
+      }
+    } catch (err) {
+      console.error('Failed to create tracking session:', err);
+    } finally {
+      setTrackingLoading(false);
+    }
+  }
 
   const circumference = 2 * Math.PI * 45;
   const offset = circumference - (result.confidence_score / 100) * circumference;
@@ -185,6 +212,31 @@ export default function EmergencyAlert({ result, onReset }) {
             <i className="las la-times" />
             TUTUP
           </button>
+
+          {result.scanLogId && !tracked && (
+            <button
+              className="btn btn-ghost"
+              onClick={handleTrackThis}
+              disabled={trackingLoading}
+              style={{ padding: '12px 24px', fontSize: '0.8125rem' }}
+              id="btn-emergency-track-this"
+            >
+              <i className="las la-heartbeat" />
+              {trackingLoading ? 'MENYIMPAN...' : 'PANTAU LUKA INI'}
+            </button>
+          )}
+
+          {tracked && (
+            <button
+              className="btn btn-ghost"
+              onClick={() => router.push('/tracker')}
+              style={{ padding: '12px 24px', fontSize: '0.8125rem', borderColor: 'rgba(0, 230, 118, 0.3)', color: 'var(--success-mint)' }}
+              id="btn-emergency-view-tracker"
+            >
+              <i className="las la-check-circle" />
+              LIHAT DI TRACKER
+            </button>
+          )}
         </div>
       </div>
     </div>
