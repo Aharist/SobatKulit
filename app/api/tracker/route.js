@@ -2,6 +2,16 @@ import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase';
 import { analyzeProgression } from '@/lib/gemini';
+import { createRateLimiter } from '@/lib/rateLimit';
+import {
+  validateImagePayload,
+  extractStoragePath,
+  deleteStorageFile,
+  toSignedUrl,
+  signScanUrls,
+} from '@/lib/apiUtils';
+
+const trackerLimiter = createRateLimiter({ limit: 10, windowMs: 60_000 });
 
 // GET: list sessions or get session detail
 export async function GET(request) {
@@ -26,7 +36,7 @@ export async function GET(request) {
         .single();
 
       if (sessErr) {
-        return NextResponse.json({ error: sessErr.message }, { status: 404 });
+        return NextResponse.json({ error: 'Sesi tidak ditemukan.' }, { status: 404 });
       }
 
       const { data: scans, error: scanErr } = await supabase
@@ -36,7 +46,10 @@ export async function GET(request) {
         .eq('user_id', userId)
         .order('created_at', { ascending: true });
 
-      return NextResponse.json({ session, scans: scans || [] });
+      // Convert stored paths to signed URLs
+      const signedScans = await signScanUrls(supabase, scans || []);
+
+      return NextResponse.json({ session, scans: signedScans });
     }
 
     // List all sessions
@@ -47,10 +60,10 @@ export async function GET(request) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: 'Gagal memuat sesi.' }, { status: 500 });
     }
 
-    // Get latest scan for each session
+    // Get latest scan for each session (with signed URLs)
     const sessionsWithPreview = await Promise.all(
       (sessions || []).map(async (session) => {
         const { data: latestScan } = await supabase
@@ -62,19 +75,34 @@ export async function GET(request) {
           .limit(1)
           .single();
 
+        // Sign the preview image URL
+        if (latestScan?.image_url) {
+          latestScan.image_url = await toSignedUrl(supabase, latestScan.image_url);
+        }
+
         return { ...session, latestScan };
       })
     );
 
     return NextResponse.json({ sessions: sessionsWithPreview });
   } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('Tracker GET error:', err);
+    return NextResponse.json({ error: 'Terjadi kesalahan.' }, { status: 500 });
   }
 }
 
 // POST: create session or add update
 export async function POST(request) {
   try {
+    // Rate limiting
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    if (!trackerLimiter.check(clientIp)) {
+      return NextResponse.json(
+        { error: 'Terlalu banyak permintaan. Silakan coba lagi nanti.' },
+        { status: 429 }
+      );
+    }
+
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -99,7 +127,7 @@ export async function POST(request) {
         .single();
 
       if (sessErr) {
-        return NextResponse.json({ error: sessErr.message }, { status: 500 });
+        return NextResponse.json({ error: 'Gagal membuat sesi.' }, { status: 500 });
       }
 
       // Link existing scan log to this session
@@ -121,6 +149,12 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
       }
 
+      // Validate image payload
+      const validation = validateImagePayload(imageBase64, mimeType || 'image/jpeg');
+      if (!validation.valid) {
+        return NextResponse.json({ error: validation.error }, { status: 400 });
+      }
+
       // Verify session belongs to user
       const { data: session, error: sessErr } = await supabase
         .from('tracking_sessions')
@@ -130,7 +164,7 @@ export async function POST(request) {
         .single();
 
       if (sessErr || !session) {
-        return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+        return NextResponse.json({ error: 'Sesi tidak ditemukan.' }, { status: 404 });
       }
 
       // Get the first scan of this session for comparison
@@ -151,10 +185,10 @@ export async function POST(request) {
         .from('skin-images')
         .upload(fileName, buffer, { contentType: mimeType, upsert: false });
 
+      // Store as storage path reference
       let imageUrl = '';
       if (uploadData) {
-        const { data: urlData } = supabase.storage.from('skin-images').getPublicUrl(fileName);
-        imageUrl = urlData?.publicUrl || '';
+        imageUrl = `storage://skin-images/${fileName}`;
       }
 
       // If storage upload fails, store as data URI fallback
@@ -166,12 +200,25 @@ export async function POST(request) {
       let progressionResult = null;
       if (firstScan && firstScan.image_url) {
         try {
-          // Fetch the old image to base64 for comparison
-          const oldImageResponse = await fetch(firstScan.image_url);
-          if (oldImageResponse.ok) {
-            const oldImageBuffer = await oldImageResponse.arrayBuffer();
-            const oldImageBase64 = Buffer.from(oldImageBuffer).toString('base64');
+          // For comparison, we need to fetch the old image
+          let oldImageBase64 = null;
 
+          // If it's a storage path, generate a signed URL first
+          const oldImageUrl = await toSignedUrl(supabase, firstScan.image_url);
+
+          if (oldImageUrl && !oldImageUrl.startsWith('data:') && !oldImageUrl.startsWith('storage://')) {
+            const oldImageResponse = await fetch(oldImageUrl);
+            if (oldImageResponse.ok) {
+              const oldImageBuffer = await oldImageResponse.arrayBuffer();
+              oldImageBase64 = Buffer.from(oldImageBuffer).toString('base64');
+            }
+          } else if (oldImageUrl && oldImageUrl.startsWith('data:')) {
+            // Extract base64 from data URI
+            const match = oldImageUrl.match(/^data:[^;]+;base64,(.+)$/);
+            if (match) oldImageBase64 = match[1];
+          }
+
+          if (oldImageBase64) {
             progressionResult = await analyzeProgression(
               oldImageBase64,
               imageBase64,
@@ -217,20 +264,26 @@ export async function POST(request) {
         .single();
 
       if (scanErr) {
-        return NextResponse.json({ error: scanErr.message }, { status: 500 });
+        return NextResponse.json({ error: 'Gagal menyimpan pemindaian.' }, { status: 500 });
       }
 
+      // Return with signed URL for immediate display
+      const displayUrl = await toSignedUrl(supabase, imageUrl);
+      const signedFirstScan = firstScan
+        ? { ...firstScan, image_url: await toSignedUrl(supabase, firstScan.image_url) }
+        : null;
+
       return NextResponse.json({
-        scan: newScan,
+        scan: { ...newScan, image_url: displayUrl },
         analysis: progressionResult,
-        firstScan,
+        firstScan: signedFirstScan,
       });
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (err) {
-    console.error('Tracker API error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('Tracker POST error:', err);
+    return NextResponse.json({ error: 'Terjadi kesalahan.' }, { status: 500 });
   }
 }
 
@@ -259,16 +312,17 @@ export async function PATCH(request) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: 'Gagal memperbarui sesi.' }, { status: 500 });
     }
 
     return NextResponse.json({ session: data });
   } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('Tracker PATCH error:', err);
+    return NextResponse.json({ error: 'Terjadi kesalahan.' }, { status: 500 });
   }
 }
 
-// DELETE: delete session
+// DELETE: delete session and clean up storage files
 export async function DELETE(request) {
   try {
     const { userId } = await auth();
@@ -285,6 +339,28 @@ export async function DELETE(request) {
 
     const supabase = createServerSupabase();
 
+    // Fetch all scan logs for this session to clean up storage files
+    const { data: sessionScans } = await supabase
+      .from('scan_logs')
+      .select('image_url')
+      .eq('session_id', sessionId)
+      .eq('user_id', userId);
+
+    // Delete storage files for all scans in this session
+    if (sessionScans && sessionScans.length > 0) {
+      const filePaths = sessionScans
+        .map((scan) => extractStoragePath(scan.image_url))
+        .filter(Boolean);
+
+      if (filePaths.length > 0) {
+        try {
+          await supabase.storage.from('skin-images').remove(filePaths);
+        } catch (storageErr) {
+          console.error('[Storage] Batch delete failed:', storageErr);
+        }
+      }
+    }
+
     // Delete session (cascade will delete scan_logs)
     const { error } = await supabase
       .from('tracking_sessions')
@@ -293,11 +369,12 @@ export async function DELETE(request) {
       .eq('user_id', userId);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: 'Gagal menghapus sesi.' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('Tracker DELETE error:', err);
+    return NextResponse.json({ error: 'Terjadi kesalahan.' }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase';
+import { signScanUrls, extractStoragePath, deleteStorageFile } from '@/lib/apiUtils';
 
 export async function GET() {
   try {
@@ -17,12 +18,16 @@ export async function GET() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: 'Gagal memuat riwayat.' }, { status: 500 });
     }
 
-    return NextResponse.json({ scans: scans || [] });
+    // Convert stored paths to signed URLs for secure client access
+    const signedScans = await signScanUrls(supabase, scans || []);
+
+    return NextResponse.json({ scans: signedScans });
   } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('History GET error:', err);
+    return NextResponse.json({ error: 'Terjadi kesalahan.' }, { status: 500 });
   }
 }
 
@@ -41,6 +46,22 @@ export async function DELETE(request) {
     }
 
     const supabase = createServerSupabase();
+
+    // Fetch the scan record first to get the storage path
+    const { data: scanRecord } = await supabase
+      .from('scan_logs')
+      .select('image_url')
+      .eq('id', scanId)
+      .eq('user_id', userId)
+      .single();
+
+    // Delete the storage file if it exists
+    if (scanRecord?.image_url) {
+      const storagePath = extractStoragePath(scanRecord.image_url);
+      await deleteStorageFile(supabase, storagePath);
+    }
+
+    // Delete the database record
     const { error } = await supabase
       .from('scan_logs')
       .delete()
@@ -48,11 +69,12 @@ export async function DELETE(request) {
       .eq('user_id', userId);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: 'Gagal menghapus riwayat.' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('History DELETE error:', err);
+    return NextResponse.json({ error: 'Terjadi kesalahan.' }, { status: 500 });
   }
 }

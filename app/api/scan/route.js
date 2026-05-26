@@ -2,9 +2,22 @@ import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase';
 import { analyzeSkinCondition } from '@/lib/gemini';
+import { createRateLimiter } from '@/lib/rateLimit';
+import { validateImagePayload } from '@/lib/apiUtils';
+
+const scanLimiter = createRateLimiter({ limit: 5, windowMs: 60_000 });
 
 export async function POST(request) {
   try {
+    // Rate limiting
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    if (!scanLimiter.check(clientIp)) {
+      return NextResponse.json(
+        { error: 'Terlalu banyak permintaan. Silakan coba lagi dalam 1 menit.' },
+        { status: 429 }
+      );
+    }
+
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -13,8 +26,10 @@ export async function POST(request) {
     const body = await request.json();
     const { imageBase64, mimeType, bodyLocation, symptoms, description } = body;
 
-    if (!imageBase64 || !mimeType) {
-      return NextResponse.json({ error: 'Image data is required' }, { status: 400 });
+    // Validate image payload
+    const validation = validateImagePayload(imageBase64, mimeType);
+    if (!validation.valid) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
     // Analyze with Gemini
@@ -36,12 +51,11 @@ export async function POST(request) {
         upsert: false,
       });
 
+    // Store the storage path as image_url (prefixed for identification)
+    // On retrieval, API will generate signed URLs dynamically
     let imageUrl = '';
     if (!uploadError && uploadData) {
-      const { data: urlData } = supabase.storage
-        .from('skin-images')
-        .getPublicUrl(fileName);
-      imageUrl = urlData?.publicUrl || '';
+      imageUrl = `storage://skin-images/${fileName}`;
     }
 
     // If storage upload fails, store as data URI fallback
@@ -70,7 +84,6 @@ export async function POST(request) {
 
     if (dbError) {
       console.error('Database error:', dbError);
-      // Return analysis even if DB save fails
       return NextResponse.json({
         analysis,
         saved: false,
@@ -78,13 +91,26 @@ export async function POST(request) {
       });
     }
 
+    // Return the scan with a live signed URL for immediate display
+    let displayUrl = imageUrl;
+    if (imageUrl.startsWith('storage://skin-images/')) {
+      const path = imageUrl.replace('storage://skin-images/', '');
+      const { data: signedData } = await supabase.storage
+        .from('skin-images')
+        .createSignedUrl(path, 24 * 60 * 60);
+      if (signedData?.signedUrl) displayUrl = signedData.signedUrl;
+    }
+
     return NextResponse.json({
       analysis,
-      scanLog,
+      scanLog: { ...scanLog, image_url: displayUrl },
       saved: true,
     });
   } catch (err) {
     console.error('Scan API error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Terjadi kesalahan saat memproses pemindaian.' },
+      { status: 500 }
+    );
   }
 }
