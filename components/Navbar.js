@@ -9,9 +9,14 @@ import ProfileDropdown from './ProfileDropdown';
 export default function Navbar() {
   const pathname = usePathname();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef(null);
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const { user } = useUser();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -53,7 +58,11 @@ export default function Navbar() {
       </ul>
 
       <div className="navbar-right">
-        {!isSignedIn ? (
+        {!mounted || !isLoaded ? (
+          <div style={{ width: '80px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="spinner spinner-sm" />
+          </div>
+        ) : !isSignedIn ? (
           <Link href="/sign-in" className="btn btn-ghost" style={{ padding: '8px 20px', fontSize: '0.75rem' }}>
             MASUK
           </Link>
