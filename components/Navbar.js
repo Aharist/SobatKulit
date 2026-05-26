@@ -41,6 +41,11 @@ export default function Navbar() {
   return (
     <nav className="navbar" role="navigation" aria-label="Main navigation">
       <Link href="/" className="navbar-brand">
+        <img
+          src="/assets/logo.png"
+          alt="SobatKulit Logo"
+          style={{ height: '32px', width: 'auto', objectFit: 'contain' }}
+        />
         Sobat<span>Kulit</span>
       </Link>
 
