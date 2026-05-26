@@ -13,6 +13,17 @@ export const metadata = {
     description: 'Platform edukasi dan skrining awal kondisi kulit menggunakan AI multimodal.',
     type: 'website',
   },
+  icons: {
+    icon: [
+      { url: '/assets/favicon/favicon.ico' },
+      { url: '/assets/favicon/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+      { url: '/assets/favicon/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/assets/favicon/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  manifest: '/assets/favicon/site.webmanifest',
 };
 
 export default function RootLayout({ children }) {
