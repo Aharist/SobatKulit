@@ -50,3 +50,4 @@ documentation
 Dockerfile
 cloudbuild.yaml
 sobatkulit.zip
+.dockerignore
