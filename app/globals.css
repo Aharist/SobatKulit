@@ -90,6 +90,10 @@ html {
   scroll-behavior: smooth;
 }
 
+html[data-scroll-behavior="smooth"] {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: var(--font-family);
   background-color: var(--bg-canvas);
@@ -574,9 +578,11 @@ img {
   .navbar {
     display: flex;
   }
+
   .bottom-nav {
     display: none;
   }
+
   body {
     padding-bottom: 0;
   }
@@ -648,14 +654,29 @@ img {
 }
 
 @keyframes scannerPulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 @keyframes scanLine {
-  0% { top: 12px; }
-  50% { top: calc(100% - 14px); }
-  100% { top: 12px; }
+  0% {
+    top: 12px;
+  }
+
+  50% {
+    top: calc(100% - 14px);
+  }
+
+  100% {
+    top: 12px;
+  }
 }
 
 /* ============================================
@@ -725,8 +746,17 @@ img {
 }
 
 @keyframes emergencyPulse {
-  0%, 100% { opacity: 0.7; border-color: rgba(var(--danger-red-rgb), 0.3); }
-  50% { opacity: 1; border-color: var(--danger-red); }
+
+  0%,
+  100% {
+    opacity: 0.7;
+    border-color: rgba(var(--danger-red-rgb), 0.3);
+  }
+
+  50% {
+    opacity: 1;
+    border-color: var(--danger-red);
+  }
 }
 
 /* ============================================
@@ -862,8 +892,15 @@ img {
 }
 
 @keyframes dropdownIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ============================================
@@ -901,11 +938,18 @@ img {
   gap: var(--space-md);
 }
 
-.grid-2 { grid-template-columns: repeat(2, 1fr); }
-.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
 
 @media (max-width: 767px) {
-  .grid-2, .grid-3 {
+
+  .grid-2,
+  .grid-3 {
     grid-template-columns: 1fr;
   }
 }
@@ -972,18 +1016,37 @@ img {
    16. Animations
    ============================================ */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in {
@@ -1027,11 +1090,22 @@ img {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.spinner-sm { width: 20px; height: 20px; border-width: 2px; }
-.spinner-lg { width: 48px; height: 48px; border-width: 4px; }
+.spinner-sm {
+  width: 20px;
+  height: 20px;
+  border-width: 2px;
+}
+
+.spinner-lg {
+  width: 48px;
+  height: 48px;
+  border-width: 4px;
+}
 
 /* ============================================
    19. Clerk Component Override (Light Theme for Auth Card)
