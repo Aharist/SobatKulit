@@ -8,6 +8,7 @@ export default function BottomNav() {
 
   const navItems = [
     { href: '/', label: 'Beranda', icon: 'las la-home' },
+    { href: '/scanner', label: 'Scanner', icon: 'las la-camera' },
     { href: '/edukasi', label: 'Dermapedia', icon: 'las la-book-medical' },
     { href: '/tracker', label: 'Tracker', icon: 'las la-heartbeat' },
   ];

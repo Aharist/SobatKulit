@@ -143,6 +143,16 @@ export default function ScanResult({ result, onReset }) {
           SCAN ULANG
         </button>
 
+        <button
+          className="btn btn-ghost"
+          onClick={onReset}
+          style={{ padding: '12px 24px', fontSize: '0.8125rem' }}
+          id="btn-close-result"
+        >
+          <i className="las la-times" />
+          TUTUP
+        </button>
+
         {result.scanLogId && !tracked && (
           <button
             className="btn btn-ghost"

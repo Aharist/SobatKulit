@@ -157,6 +157,11 @@ export async function POST(request) {
         imageUrl = urlData?.publicUrl || '';
       }
 
+      // If storage upload fails, store as data URI fallback
+      if (!imageUrl) {
+        imageUrl = `data:${mimeType};base64,${imageBase64}`;
+      }
+
       // Get first scan image for comparison
       let progressionResult = null;
       if (firstScan && firstScan.image_url) {

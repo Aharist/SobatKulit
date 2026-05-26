@@ -46,7 +46,7 @@ export async function POST(request) {
 
     // If storage upload fails, store as data URI fallback
     if (!imageUrl) {
-      imageUrl = `data:${mimeType};base64,${imageBase64.substring(0, 100)}...`;
+      imageUrl = `data:${mimeType};base64,${imageBase64}`;
     }
 
     // Save scan log to database

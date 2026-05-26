@@ -166,14 +166,26 @@ export default function EmergencyAlert({ result, onReset }) {
           <EmergencyMap lat={userLocation.lat} lng={userLocation.lng} />
         )}
 
-        <button
-          className="btn btn-ghost"
-          onClick={onReset}
-          style={{ padding: '12px 24px', fontSize: '0.8125rem', alignSelf: 'center' }}
-        >
-          <i className="las la-redo-alt" />
-          SCAN ULANG
-        </button>
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button
+            className="btn btn-ghost"
+            onClick={onReset}
+            style={{ padding: '12px 24px', fontSize: '0.8125rem' }}
+            id="btn-emergency-scan-again"
+          >
+            <i className="las la-redo-alt" />
+            SCAN ULANG
+          </button>
+          <button
+            className="btn btn-ghost"
+            onClick={onReset}
+            style={{ padding: '12px 24px', fontSize: '0.8125rem' }}
+            id="btn-emergency-close"
+          >
+            <i className="las la-times" />
+            TUTUP
+          </button>
+        </div>
       </div>
     </div>
   );
