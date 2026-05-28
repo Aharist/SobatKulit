@@ -117,10 +117,10 @@ export default function QuestionnaireModal({ imagePreview, onSubmit, onBack }) {
           </div>
 
           <div className="modal-footer">
-            <button type="button" className="btn btn-ghost" onClick={onBack} style={{ padding: '10px 20px', fontSize: '0.75rem' }}>
+            <button type="button" className="btn btn-ghost" onClick={onBack}>
               KEMBALI
             </button>
-            <button type="submit" className="btn btn-primary" id="btn-analyze" style={{ padding: '10px 20px', fontSize: '0.75rem' }}>
+            <button type="submit" className="btn btn-primary" id="btn-analyze">
               <i className="las la-brain" style={{ fontSize: '1rem' }} />
               ANALISIS SEKARANG
             </button>

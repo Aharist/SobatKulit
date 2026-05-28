@@ -404,6 +404,7 @@ img {
   justify-content: center;
   padding: var(--space-md);
   animation: fadeIn var(--transition-normal) ease;
+  overflow-y: auto;
 }
 
 .modal-content {
@@ -463,6 +464,7 @@ img {
   gap: var(--space-sm);
   padding: var(--space-md) var(--space-lg);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
+  flex-wrap: wrap;
 }
 
 /* ============================================
@@ -921,7 +923,7 @@ img {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 var(--space-md);
+  padding: 0 var(--space-lg);
 }
 
 .page-content {
@@ -965,6 +967,51 @@ img {
     max-width: 480px;
     margin: 0 auto;
     width: 100%;
+  }
+}
+
+/* Mobile-specific overrides */
+@media (max-width: 480px) {
+  .container {
+    padding: 0 var(--space-md);
+  }
+
+  .modal-backdrop {
+    padding: var(--space-sm);
+  }
+
+  .modal-content {
+    max-height: 95vh;
+  }
+
+  .modal-header {
+    padding: var(--space-md);
+  }
+
+  .modal-header h2 {
+    font-size: 1rem;
+  }
+
+  .modal-body {
+    padding: var(--space-md);
+  }
+
+  .modal-footer {
+    padding: var(--space-sm) var(--space-md);
+    gap: var(--space-sm);
+  }
+
+  .modal-footer .btn {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 10px 14px;
+    font-size: 0.6875rem;
+    letter-spacing: 0.8px;
+    white-space: nowrap;
+  }
+
+  .page-title {
+    font-size: 1.25rem;
   }
 }
 

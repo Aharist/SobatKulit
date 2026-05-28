@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 export default function ScannerCamera({ onCapture }) {
   const [mode, setMode] = useState('select'); // select | camera | preview
@@ -9,9 +9,28 @@ export default function ScannerCamera({ onCapture }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
+  const streamRef = useRef(null);
+
+  // Keep streamRef in sync with stream state
+  useEffect(() => {
+    streamRef.current = stream;
+  }, [stream]);
+
+  // Cleanup: stop camera when component unmounts
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
 
   const startCamera = useCallback(async () => {
     try {
+      // Stop any existing stream before starting a new one
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } },
       });
@@ -28,10 +47,10 @@ export default function ScannerCamera({ onCapture }) {
   }, []);
 
   function stopCamera() {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-      setStream(null);
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
     }
+    setStream(null);
   }
 
   function capturePhoto() {

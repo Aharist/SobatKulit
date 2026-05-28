@@ -121,10 +121,10 @@ export default function ProfileModal({ onClose }) {
                 Tersimpan
               </span>
             )}
-            <button type="button" className="btn btn-ghost" onClick={onClose} style={{ padding: '10px 20px', fontSize: '0.75rem' }}>
+            <button type="button" className="btn btn-ghost" onClick={onClose}>
               BATAL
             </button>
-            <button type="submit" className="btn btn-primary" disabled={loading} style={{ padding: '10px 20px', fontSize: '0.75rem' }}>
+            <button type="submit" className="btn btn-primary" disabled={loading}>
               {loading ? 'MENYIMPAN...' : 'SIMPAN'}
             </button>
           </div>

@@ -265,7 +265,6 @@ export default function RiwayatPage() {
               <button
                 className="btn btn-ghost"
                 onClick={() => setSelectedScan(null)}
-                style={{ padding: '10px 20px', fontSize: '0.75rem' }}
               >
                 TUTUP
               </button>
