@@ -15,6 +15,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState(null);
+  const [role, setRole] = useState('free');
 
   useEffect(() => {
     if (user) {
@@ -33,6 +34,7 @@ export default function ProfilePage() {
             birth_date: data.profile.birth_date || '',
             address: data.profile.address || '',
           });
+          setRole(data.profile.role || 'free');
         }
       }
     } catch (err) {
@@ -108,9 +110,41 @@ export default function ProfilePage() {
             <h2 className="heading-card" style={{ marginBottom: '4px' }}>
               {formData.full_name || 'Pengguna SobatKulit'}
             </h2>
-            <p className="text-meta" style={{ marginBottom: '16px' }}>
+            <p className="text-meta" style={{ marginBottom: '8px' }}>
               {user?.emailAddresses?.[0]?.emailAddress}
             </p>
+            {!loading && (
+              <Link 
+                href="/pricing" 
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: role === 'premium' ? 'rgba(0, 242, 254, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                  color: role === 'premium' ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+                  padding: '4px 12px',
+                  borderRadius: 'var(--radius-pill)',
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                  letterSpacing: '1px',
+                  margin: '0 auto 16px auto',
+                  border: role === 'premium' ? '1px solid var(--accent-cyan)' : '1px solid rgba(255, 255, 255, 0.1)',
+                  transition: 'all var(--transition-fast)'
+                }}
+              >
+                {role === 'premium' ? (
+                  <>
+                    <i className="las la-crown" style={{ fontSize: '1rem' }} />
+                    PREMIUM
+                  </>
+                ) : (
+                  <>
+                    <i className="las la-user" style={{ fontSize: '1rem' }} />
+                    FREE
+                  </>
+                )}
+              </Link>
+            )}
             <div className="profile-dropdown-divider" style={{ margin: '16px 0' }} />
             <Link href="/riwayat" className="btn btn-ghost" style={{ width: '100%', padding: '12px', fontSize: '0.8125rem' }}>
               <i className="las la-history" />
