@@ -1,8 +1,26 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function PricingPage() {
+  const [userProfile, setUserProfile] = useState(null);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const res = await fetch('/api/profile');
+        if (res.ok) {
+          const data = await res.json();
+          setUserProfile(data.profile);
+        }
+      } catch (err) {
+        console.error('Failed to fetch profile:', err);
+      }
+    }
+    fetchProfile();
+  }, []);
+
   return (
     <div className="container page-content">
       <div className="page-header" style={{ textAlign: 'center', marginBottom: '40px' }}>
@@ -49,9 +67,15 @@ export default function PricingPage() {
             </li>
           </ul>
 
-          <button className="btn btn-ghost" style={{ width: '100%' }} disabled>
-            Sedang Aktif
-          </button>
+          {userProfile?.role === 'premium' ? (
+            <button className="btn btn-ghost" style={{ width: '100%' }} disabled>
+              Paket Dasar
+            </button>
+          ) : (
+            <button className="btn btn-ghost" style={{ width: '100%' }} disabled>
+              Sedang Aktif
+            </button>
+          )}
         </div>
 
         {/* Premium Plan */}
@@ -105,19 +129,26 @@ export default function PricingPage() {
             </li>
           </ul>
 
-          <button 
-            className="btn btn-primary" 
-            style={{ width: '100%' }}
-            onClick={(e) => {
-              // Dummy action as requested
-              e.preventDefault();
-              console.log('Redirect to payment gateway...');
-              alert('Fitur pembayaran sedang dalam pengembangan!');
-            }}
-          >
-            <i className="las la-crown" style={{ marginRight: '6px' }} />
-            BELI PREMIUM
-          </button>
+          {userProfile?.role === 'premium' ? (
+            <button className="btn btn-ghost" style={{ width: '100%', borderColor: 'var(--accent-cyan)', color: 'var(--accent-cyan)' }} disabled>
+              <i className="las la-check-circle" style={{ marginRight: '6px' }} />
+              SEDANG AKTIF
+            </button>
+          ) : (
+            <button 
+              className="btn btn-primary" 
+              style={{ width: '100%' }}
+              onClick={(e) => {
+                // Dummy action as requested
+                e.preventDefault();
+                console.log('Redirect to payment gateway...');
+                alert('Fitur pembayaran sedang dalam pengembangan!');
+              }}
+            >
+              <i className="las la-crown" style={{ marginRight: '6px' }} />
+              BELI PREMIUM
+            </button>
+          )}
         </div>
       </div>
       

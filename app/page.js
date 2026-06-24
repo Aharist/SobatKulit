@@ -3,6 +3,8 @@ import { Shield, MapPin, Sun } from 'lucide-react';
 import { auth } from '@clerk/nextjs/server';
 import { createServerSupabase } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 export default async function HomePage() {
   const { userId } = await auth();
   let role = 'free';
