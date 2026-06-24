@@ -26,9 +26,9 @@ export async function POST(req) {
     const orderId = `PRM-${Date.now()}-${userId.slice(-8)}`;
     const grossAmount = 49000;
 
-    // We can get email from clerk using clerkClient if we need, 
-    // but Midtrans only requires order_id and gross_amount for basic Snap.
-    // If we want more details, we can add customer_details.
+    // Determine the base URL for callbacks
+    const origin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/[^/]*$/, '') || 'http://localhost:3000';
+
     const payload = {
       transaction_details: {
         order_id: orderId,
@@ -45,7 +45,11 @@ export async function POST(req) {
           quantity: 1,
           name: 'Paket Premium SobatKulit 1 Bulan',
         }
-      ]
+      ],
+      // Redirect URLs after payment on Midtrans page
+      callbacks: {
+        finish: `${origin}/payment/finish`
+      }
     };
 
     const serverKey = process.env.MIDTRANS_SERVER_KEY;
@@ -66,12 +70,16 @@ export async function POST(req) {
     if (!midtransRes.ok) {
       console.error('Midtrans Error:', midtransData);
       return NextResponse.json(
-        { error: 'Gagal menghubungi payment gateway' },
+        { error: 'Gagal menghubungi payment gateway', details: midtransData },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ token: midtransData.token });
+    // Return the redirect_url so the frontend can navigate to Midtrans payment page
+    return NextResponse.json({ 
+      redirect_url: midtransData.redirect_url,
+      token: midtransData.token 
+    });
 
   } catch (error) {
     console.error('Checkout API Error:', error);

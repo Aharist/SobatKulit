@@ -2,13 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Script from 'next/script';
-import { useRouter } from 'next/navigation';
 
 export default function PricingPage() {
   const [userProfile, setUserProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     async function fetchProfile() {
@@ -28,7 +25,7 @@ export default function PricingPage() {
   const handleUpgrade = async () => {
     setIsLoading(true);
     try {
-      // 1. Dapatkan Snap Token dari backend
+      // 1. Dapatkan redirect URL dari backend
       const response = await fetch('/api/checkout', {
         method: 'POST',
       });
@@ -38,56 +35,18 @@ export default function PricingPage() {
         throw new Error(data.error || 'Gagal membuat transaksi');
       }
 
-      if (typeof window.snap === 'undefined') {
-        throw new Error('Sistem pembayaran sedang memuat. Mohon tunggu beberapa detik dan coba lagi.');
-      }
-
-      // 2. Panggil Midtrans Snap
-      window.snap.pay(data.token, {
-        onSuccess: async function (result) {
-          console.log('Payment success:', result);
-          try {
-            // Callback ke backend kita untuk update role
-            const updateRes = await fetch('/api/upgrade', { method: 'POST' });
-            if (updateRes.ok) {
-              alert('Pembayaran Berhasil! Akun Anda kini Premium.');
-              router.push('/profile');
-            } else {
-              alert('Pembayaran berhasil, tetapi gagal memperbarui status akun. Harap hubungi support.');
-            }
-          } catch (err) {
-            console.error(err);
-            alert('Pembayaran berhasil, tetapi terjadi kesalahan saat memperbarui akun.');
-          }
-        },
-        onPending: function (result) {
-          console.log('Payment pending:', result);
-          alert('Pembayaran sedang diproses (pending). Silakan selesaikan pembayaran Anda.');
-        },
-        onError: function (result) {
-          console.log('Payment error:', result);
-          alert('Pembayaran gagal. Silakan coba lagi.');
-        },
-        onClose: function () {
-          console.log('Payment popup closed');
-          alert('Anda menutup pop-up sebelum menyelesaikan pembayaran.');
-        }
-      });
+      // 2. Redirect ke halaman pembayaran Midtrans
+      window.location.href = data.redirect_url;
 
     } catch (error) {
       console.error('Checkout error:', error);
       alert(error.message);
-    } finally {
       setIsLoading(false);
     }
   };
 
   return (
     <>
-      <Script
-        src="https://app.sandbox.midtrans.com/snap/snap.js"
-        data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
-      />
       <div className="container page-content">
       <div className="page-header" style={{ textAlign: 'center', marginBottom: '40px' }}>
         <h1 className="page-title">
