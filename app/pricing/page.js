@@ -2,9 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Script from 'next/script';
+import { useRouter } from 'next/navigation';
 
 export default function PricingPage() {
   const [userProfile, setUserProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchProfile() {
@@ -21,8 +25,70 @@ export default function PricingPage() {
     fetchProfile();
   }, []);
 
+  const handleUpgrade = async () => {
+    setIsLoading(true);
+    try {
+      // 1. Dapatkan Snap Token dari backend
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Gagal membuat transaksi');
+      }
+
+      if (typeof window.snap === 'undefined') {
+        throw new Error('Sistem pembayaran sedang memuat. Mohon tunggu beberapa detik dan coba lagi.');
+      }
+
+      // 2. Panggil Midtrans Snap
+      window.snap.pay(data.token, {
+        onSuccess: async function (result) {
+          console.log('Payment success:', result);
+          try {
+            // Callback ke backend kita untuk update role
+            const updateRes = await fetch('/api/upgrade', { method: 'POST' });
+            if (updateRes.ok) {
+              alert('Pembayaran Berhasil! Akun Anda kini Premium.');
+              router.push('/profile');
+            } else {
+              alert('Pembayaran berhasil, tetapi gagal memperbarui status akun. Harap hubungi support.');
+            }
+          } catch (err) {
+            console.error(err);
+            alert('Pembayaran berhasil, tetapi terjadi kesalahan saat memperbarui akun.');
+          }
+        },
+        onPending: function (result) {
+          console.log('Payment pending:', result);
+          alert('Pembayaran sedang diproses (pending). Silakan selesaikan pembayaran Anda.');
+        },
+        onError: function (result) {
+          console.log('Payment error:', result);
+          alert('Pembayaran gagal. Silakan coba lagi.');
+        },
+        onClose: function () {
+          console.log('Payment popup closed');
+          alert('Anda menutup pop-up sebelum menyelesaikan pembayaran.');
+        }
+      });
+
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="container page-content">
+    <>
+      <Script
+        src="https://app.sandbox.midtrans.com/snap/snap.js"
+        data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+      />
+      <div className="container page-content">
       <div className="page-header" style={{ textAlign: 'center', marginBottom: '40px' }}>
         <h1 className="page-title">
           <i className="las la-gem" style={{ color: 'var(--accent-cyan)', marginRight: '8px' }} />
@@ -138,15 +204,20 @@ export default function PricingPage() {
             <button 
               className="btn btn-primary" 
               style={{ width: '100%' }}
-              onClick={(e) => {
-                // Dummy action as requested
-                e.preventDefault();
-                console.log('Redirect to payment gateway...');
-                alert('Fitur pembayaran sedang dalam pengembangan!');
-              }}
+              onClick={handleUpgrade}
+              disabled={isLoading}
             >
-              <i className="las la-crown" style={{ marginRight: '6px' }} />
-              BELI PREMIUM
+              {isLoading ? (
+                <>
+                  <div className="spinner spinner-sm" style={{ marginRight: '8px', borderTopColor: '#000' }} />
+                  MEMPROSES...
+                </>
+              ) : (
+                <>
+                  <i className="las la-crown" style={{ marginRight: '6px' }} />
+                  BELI PREMIUM
+                </>
+              )}
             </button>
           )}
         </div>
@@ -159,5 +230,6 @@ export default function PricingPage() {
         </Link>
       </div>
     </div>
+    </>
   );
 }
