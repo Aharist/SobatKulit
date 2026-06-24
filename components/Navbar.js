@@ -33,6 +33,7 @@ export default function Navbar() {
     { href: '/scanner', label: 'Scanner', icon: 'las la-camera' },
     { href: '/edukasi', label: 'Dermapedia', icon: 'las la-book-medical' },
     { href: '/tracker', label: 'Tracker', icon: 'las la-heartbeat' },
+    { href: '/pricing', label: 'Pricing', icon: 'las la-gem' },
   ];
 
   const displayName = user?.emailAddresses?.[0]?.emailAddress || user?.phoneNumbers?.[0]?.phoneNumber || 'User';

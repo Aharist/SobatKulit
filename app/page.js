@@ -1,10 +1,66 @@
 import Link from 'next/link';
 import { Shield, MapPin, Sun } from 'lucide-react';
+import { auth } from '@clerk/nextjs/server';
+import { createServerSupabase } from '@/lib/supabase';
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { userId } = await auth();
+  let role = 'free';
+
+  if (userId) {
+    const supabase = createServerSupabase();
+    const { data } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+      
+    if (data && data.role) {
+      role = data.role;
+    }
+  }
 
   return (
     <div className="container" style={{ minHeight: 'calc(100vh - 140px)' }}>
+      {role !== 'premium' && (
+        <>
+          <style>{`
+            .mobile-premium-btn {
+              position: fixed;
+              top: 80px;
+              left: 50%;
+              transform: translateX(-50%);
+              z-index: 90;
+              display: none;
+            }
+            @media (max-width: 768px) {
+              .mobile-premium-btn {
+                display: flex;
+              }
+            }
+          `}</style>
+
+          <div className="mobile-premium-btn">
+            <Link href="/pricing" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'var(--accent-cyan)',
+              color: 'var(--text-on-accent)',
+              padding: '8px 16px',
+              borderRadius: 'var(--radius-pill)',
+              boxShadow: 'var(--shadow-glow-cyan)',
+              fontWeight: '700',
+              fontSize: '0.75rem',
+              letterSpacing: '1px'
+            }}>
+              <i className="las la-crown" style={{ fontSize: '1.25rem' }} />
+              UPGRADE PLAN
+            </Link>
+          </div>
+        </>
+      )}
+
       <div className="hero">
         <div className="hero-content">
           <div className="hero-text animate-slide-up">

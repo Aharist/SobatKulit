@@ -32,6 +32,21 @@ export async function POST(request) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
+    const supabase = createServerSupabase();
+
+    // Check user limits
+    const { data: userProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role, scan_count')
+      .eq('id', userId)
+      .single();
+
+    if (!profileError && userProfile) {
+      if (userProfile.role === 'free' && userProfile.scan_count >= 3) {
+        return NextResponse.json({ error: 'Limit bulanan sudah habis, yuk upgrade agar bisa scan lebih banyak' }, { status: 403 });
+      }
+    }
+
     // Analyze with Gemini
     const analysis = await analyzeSkinCondition(imageBase64, mimeType, {
       bodyLocation,
@@ -40,7 +55,6 @@ export async function POST(request) {
     });
 
     // Upload image to Supabase Storage
-    const supabase = createServerSupabase();
     const fileName = `${userId}/${Date.now()}.${mimeType === 'image/png' ? 'png' : 'jpg'}`;
     const buffer = Buffer.from(imageBase64, 'base64');
 
@@ -89,6 +103,14 @@ export async function POST(request) {
         saved: false,
         error: 'Analysis successful but failed to save to database',
       });
+    }
+
+    // Increment scan_count if user is free
+    if (!profileError && userProfile && userProfile.role === 'free') {
+      await supabase
+        .from('profiles')
+        .update({ scan_count: (userProfile.scan_count || 0) + 1 })
+        .eq('id', userId);
     }
 
     // Return the scan with a live signed URL for immediate display
